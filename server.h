@@ -4,14 +4,14 @@
 #include "cmd_node.h"
 #include "node_list.h"
 #include "pipe_node.h"
+#include "client_node.h"
 
-int exec_cmd_node(cmd_node_t* cmd_node);
+int exec_cmd_node(cmd_node_t* cmd_node, client_node_t* client);
 int is_cmd_exist(char* cmd, char* env_path);
-void serve(int client_fd);
+void serve(client_node_t* client);
 void remove_from_chain(node_t* node_to_remove);
 int get_file_fd(char* filename);
 void remove_unused_nodes();
 void close_unused_fd();
-cmd_node_t* cmd_exec_list;
-pipe_node_t* pipe_list;
+
 #endif
