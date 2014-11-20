@@ -5,6 +5,10 @@ struct pipe_node {
     int out_fd;
     int in_fd;
     struct pipe_node* next_node;
+
+    // for global use
+    int from_user_id;
+    int to_user_id;
 };
 
 typedef struct pipe_node pipe_node_t;

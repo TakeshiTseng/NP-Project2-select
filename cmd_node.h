@@ -13,7 +13,9 @@ struct cmd_node {
 
     // add pipe to user
     int pipe_to_user;
-    int user_fd; // other client fd
+    int pipe_from_user;
+    int user_id; // other client fd
+
 };
 
 typedef struct cmd_node cmd_node_t;
