@@ -12,26 +12,27 @@ int _get_type(char* str);
 
 void init_source_fd(int _sfd) {
     _source_fd = _sfd;
-    _p_buffer = malloc(sizeof(char) * 10010);
+    // _p_buffer = malloc(sizeof(char) * 10010);
 }
 
 void _read_and_parse() {
-    char _tp_buffer[10010];
-    bzero(_tp_buffer, 10010);
-    bzero(_p_buffer, 10010); // clean up before read.
+    char _p_buffer[30000];
+    char _tp_buffer[30000];
+    bzero(_tp_buffer, 30000);
+    bzero(_p_buffer, 30000); // clean up before read.
 
     // FIXME !!
     int _n_bytes = 0;
     // int _tn_bytes = read(_source_fd, _tp_buffer, 10010);
     // XXX: change to stdin
-    int _tn_bytes = read(0, _tp_buffer, 10010);
+    int _tn_bytes = read(0, _tp_buffer, 30000);
     while(_tn_bytes != 0) {
         memcpy(&_p_buffer[_n_bytes], _tp_buffer, _tn_bytes);
         _n_bytes += _tn_bytes;
         if(_tp_buffer[_tn_bytes - 1] == '\n') {
             break;
         }
-        _tn_bytes = read(_source_fd, _tp_buffer, 10010);
+        _tn_bytes = read(_source_fd, _tp_buffer, 30000);
     }
 
     if(_n_bytes <= 0) { // end of stream or error
@@ -44,7 +45,7 @@ void _read_and_parse() {
     }
 
     // need to add a space before new line "\n"
-    str_replace_one_world(&_p_buffer, '\r', ' ');
+    str_replace_one_world(_p_buffer, '\r', ' ');
 
     // TODO: fix it
     // _p_buffer = insert_char_to_match(_p_buffer, '\n', ' ', INS_MODE_BOTH);
@@ -96,10 +97,14 @@ int _get_type(char* str) {
         return PIPE_N;
     } else if(is_match(str, "\\|")) {
         return PIPE;
-    } else if(is_match(str, ">")) {
-        return PASS;
+    } else if(is_match(str, ">[[:digit:]]+")) {
+        return PIPE_TO_USR;
     } else if(is_match(str, "\n")) {
         return NEW_LINE;
+    } else if(is_match(str, ">")) {
+        return PASS;
+    } else if(is_match(str, "<[[:digit:]]+")) {
+        return PIPE_FROM_USR;
     } else {
         return CMD;
     }
