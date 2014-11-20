@@ -7,7 +7,7 @@
 
 void str_split(char* str, const char* tok, char*** res, int* count);
 int is_match(const char* str, char* regex);
-void str_replace_one_world(char** str, char match, char to_replace);
+void str_replace_one_world(char* str, char match, char to_replace);
 int count_char_num(char* str, char c);
 
 // TODO: fix it

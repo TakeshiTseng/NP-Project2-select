@@ -60,11 +60,11 @@ int is_match(const char* str, char* regex_str) {
 
 }
 
-void str_replace_one_world(char** str, char match, char to_replace) {
+void str_replace_one_world(char* str, char match, char to_replace) {
     int c=0;
-    while((*str)[c] != '\0') {
-        if((*str)[c] == match) {
-            (*str)[c] = to_replace;
+    while(str[c] != '\0') {
+        if(str[c] == match) {
+            str[c] = to_replace;
         }
         c++;
     }
