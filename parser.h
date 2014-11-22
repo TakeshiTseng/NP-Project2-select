@@ -8,6 +8,7 @@
 #define STATE_FILE 2
 #define STATE_ARGS 3
 #define STATE_NW 4
+#define STATE_FROM_USR 5
 
 struct arg_node {
     char* arg_str;

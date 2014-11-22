@@ -7,36 +7,40 @@
 #include <regex.h>
 
 token_node_t* _tok_list = NULL;
+int _read_line(char* buff);
 void _read_and_parse();
 int _get_type(char* str);
+void _handle_yell(char _p_buffer[]);
+void _handle_tell(char _p_buffer[]);
 
 void init_source_fd(int _sfd) {
     _source_fd = _sfd;
     // _p_buffer = malloc(sizeof(char) * 10010);
 }
 
+int _read_line(char* res) {
+    int n_byte = 0;
+    int r = 1;
+    char buf;
+    while(r == 1 && buf != '\n') {
+        r = read(0, &buf, 1);
+        res[n_byte] = buf;
+        n_byte += r;
+    }
+    return n_byte;
+}
+
 void _read_and_parse() {
     char _p_buffer[30000];
-    char _tp_buffer[30000];
-    bzero(_tp_buffer, 30000);
     bzero(_p_buffer, 30000); // clean up before read.
 
-    // FIXME !!
-    int _n_bytes = 0;
-    // int _tn_bytes = read(_source_fd, _tp_buffer, 10010);
-    // XXX: change to stdin
-    int _tn_bytes = read(0, _tp_buffer, 30000);
-    while(_tn_bytes != 0) {
-        memcpy(&_p_buffer[_n_bytes], _tp_buffer, _tn_bytes);
-        _n_bytes += _tn_bytes;
-        if(_tp_buffer[_tn_bytes - 1] == '\n') {
-            break;
-        }
-        _tn_bytes = read(_source_fd, _tp_buffer, 30000);
-    }
+    int _n_bytes = _read_line(_p_buffer);
+    last_line = malloc(_n_bytes + 1);
+    bzero(last_line, _n_bytes + 1);
+    strcpy(last_line, _p_buffer);
+    last_line[_n_bytes - 2] = '\0';
 
     if(_n_bytes <= 0) { // end of stream or error
-        // TODO: need to handle error
         token_node_t* new_node = malloc(sizeof(token_node_t));
         new_node->token_str = "";
         new_node->type = FEOF;
@@ -47,8 +51,17 @@ void _read_and_parse() {
     // need to add a space before new line "\n"
     str_replace_one_world(_p_buffer, '\r', ' ');
 
-    // TODO: fix it
-    // _p_buffer = insert_char_to_match(_p_buffer, '\n', ' ', INS_MODE_BOTH);
+    // XXX: add special token: yell, tell
+    // because name will not contains space,
+    // let name as normal command
+
+    if(is_match(_p_buffer, "yell .*")) {
+        _handle_yell(_p_buffer);
+        return;
+    } else if(is_match(_p_buffer, "tell .*")) {
+        _handle_tell(_p_buffer);
+        return;
+    }
 
     char** _result;
     int _num_of_token;
@@ -140,4 +153,104 @@ token_node_t* get_token_list() {
         _read_and_parse();
     }
     return _tok_list;
+}
+
+void _handle_yell(char _p_buffer[]) {
+    token_node_t* yell_node = malloc(sizeof(token_node_t));
+    yell_node->type = CMD;
+    yell_node->token_str = "yell";
+    yell_node->next_node = NULL;
+
+    insert_node(&_tok_list, yell_node);
+
+    // split message
+    char message[10000];
+    bzero(message, 10000);
+    strcpy(message, (_p_buffer + 5));
+    // remove last space and new line
+    int _i = strlen(message) - 1;
+    while(message[_i] == '\n' || message[_i] == ' ') {
+        message[_i--] = '\0';
+    }
+
+    token_node_t* msg_node = malloc(sizeof(token_node_t));
+    msg_node->type = CMD;
+    msg_node->token_str = message;
+    msg_node->next_node = NULL;
+
+    insert_node(&_tok_list, msg_node);
+    token_node_t* new_line_tok = malloc(sizeof(token_node_t));
+    new_line_tok->type = NEW_LINE;
+    new_line_tok->token_str = "\n";
+    new_line_tok->next_node = NULL;
+
+    insert_node(&_tok_list, new_line_tok);
+
+}
+
+void _handle_tell(char _p_buffer[]) {
+    // format
+    // tell [name] [message]
+
+    //first, remove "tell "(include space)
+    char tmp[10000];
+    strcpy(tmp, (_p_buffer + 5));
+
+    // create tell node
+    token_node_t* tell_node = malloc(sizeof(token_node_t));
+    tell_node->type = CMD;
+    tell_node->token_str = "tell";
+    tell_node->next_node = NULL;
+
+    insert_node(&_tok_list, tell_node);
+
+    // second, get name
+    // (oops: it not user name, is client id, :P)
+    // XXX: using ugly methon to get name
+    char name[21]; // name is less then 20 characters
+    bzero(name, 21);
+    int _i; // temp index
+    for(_i=0; _i<20; _i++) {
+        if(tmp[_i] == ' ') {
+            break;
+        } else {
+            name[_i] = tmp[_i];
+        }
+    }
+
+    // generate name node
+    token_node_t* name_node = malloc(sizeof(token_node_t));
+    name_node->type = CMD;
+    name_node->token_str = name;
+    name_node->next_node = NULL;
+
+    insert_node(&_tok_list, name_node);
+
+
+    // finally, remove name and get message
+    char message[10000];
+    bzero(message, 10000);
+    strcpy(message, (tmp + _i + 1));
+
+    // remove last space and new line
+    _i = strlen(message) - 1;
+    while(message[_i] == '\n' || message[_i] == ' ') {
+        message[_i--] = '\0';
+    }
+
+    //generate message node
+
+    token_node_t* msg_node = malloc(sizeof(token_node_t));
+    msg_node->type = CMD;
+    msg_node->token_str = message;
+    msg_node->next_node = NULL;
+
+    insert_node(&_tok_list, msg_node);
+
+    token_node_t* new_line_tok = malloc(sizeof(token_node_t));
+    new_line_tok->type = NEW_LINE;
+    new_line_tok->token_str = "\n";
+    new_line_tok->next_node = NULL;
+
+    insert_node(&_tok_list, new_line_tok);
 }

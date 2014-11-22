@@ -32,7 +32,7 @@ void parse_tokens(cmd_node_t** cmd_node_list) {
                 // pipe
                 if(token_type == PIPE) {
                     current_cmd_node->pipe_count = 1;
-                } else {
+                } else if(token_type == PIPE_N) {
                     // pipt n
                     // cut first letter
                     char* pipe_n_str;
@@ -41,6 +41,17 @@ void parse_tokens(cmd_node_t** cmd_node_list) {
                     // set number to pipe count
                     current_cmd_node->pipe_count = atoi(pipe_n_str);
                     free(pipe_n_str);
+                } else if(token_type == PIPE_TO_USR) {
+                    // pipe to user id
+                    // cut first letter
+                    char* client_id_str;
+                    client_id_str = malloc(sizeof(char) * (strlen(token_str) + 1));
+                    strcpy(client_id_str, (token_str + 1));
+
+                    // set client id to pipe to
+                    current_cmd_node->user_id = atoi(client_id_str);
+                    current_cmd_node->pipe_to_user = 1;
+                    free(client_id_str);
                 }
 
                 insert_cmd_node(cmd_node_list, current_cmd_node);
@@ -64,6 +75,8 @@ void parse_tokens(cmd_node_t** cmd_node_list) {
             current_cmd_node->pipe_fd[0] = -1;
             current_cmd_node->pipe_fd[1] = -1;
             current_cmd_node->is_exec = 0;
+            current_cmd_node->pipe_from_user = 0;
+            current_cmd_node->pipe_to_user = 0;
 
             // copy text to cmd node
             current_cmd_node->cmd = malloc(sizeof(char)*(strlen(token_str) + 1));
@@ -133,10 +146,34 @@ void parse_tokens(cmd_node_t** cmd_node_list) {
             token_type = next_token(&token_str);
             pre_state = state;
             state = _next_state(state, token_type);
+        } else if(state == STATE_FROM_USR) {
+            if(current_cmd_node != NULL) {
+                insert_cmd_node(cmd_node_list, current_cmd_node);
+                current_cmd_node = NULL;
+            }
+            current_cmd_node = malloc(sizeof(cmd_node_t));
+            current_cmd_node->pipe_to_file = 0;// not to pipe to file
+            current_cmd_node->pipe_count = 0;
+            current_cmd_node->next_node = NULL;
+            current_cmd_node->filename = NULL;
+            current_cmd_node->pipe_fd[0] = -1;
+            current_cmd_node->pipe_fd[1] = -1;
+            current_cmd_node->is_exec = 0;
+            current_cmd_node->pipe_from_user = 1;
+            current_cmd_node->pipe_to_user = 0;
+            char user_id_str[10];
+            bzero(user_id_str, 10);
+            strcpy(user_id_str, (token_str + 1));
+            current_cmd_node->user_id = atoi(user_id_str);
+            insert_cmd_node(cmd_node_list, current_cmd_node);
+
+            pre_state = state;
+            token_type = next_token(&token_str);
+            state = _next_state(state, token_type);
         }
     }
     // new line
-    if(pre_state == STATE_INIT) {
+    if(pre_state == STATE_INIT || pre_state == STATE_FROM_USR) {
         // do nothing?
         current_cmd_node = malloc(sizeof(cmd_node_t));
         current_cmd_node->pipe_count = -1; //assume we set -1 to new line command(?)
@@ -156,6 +193,8 @@ int _next_state(int state, int next_token_type) {
             return STATE_CMD;
         } else if(next_token_type == NEW_LINE) {
             return STATE_NW;
+        } else if(next_token_type == PIPE_FROM_USR) {
+            return STATE_FROM_USR;
         }
     } else if(state == STATE_CMD) {
         if(next_token_type == CMD) {
@@ -166,6 +205,10 @@ int _next_state(int state, int next_token_type) {
             return STATE_NW;
         } else if(next_token_type == PIPE || next_token_type == PIPE_N) {
             return STATE_INIT;
+        } else if(next_token_type == PIPE_TO_USR) {
+            return STATE_INIT;
+        } else if(next_token_type == PIPE_FROM_USR) {
+            return STATE_FROM_USR;
         }
     } else if(state == STATE_ARGS) {
         if(next_token_type == CMD) {
@@ -176,6 +219,8 @@ int _next_state(int state, int next_token_type) {
             return STATE_FILE;
         } else if(next_token_type == NEW_LINE) {
             return STATE_NW;
+        } else if(next_token_type == PIPE_TO_USR) {
+            return STATE_INIT;
         }
     } else if(state == STATE_FILE) {
         if(next_token_type == PIPE || next_token_type == PIPE_N) {
