@@ -109,6 +109,7 @@ int exec_cmd_node(cmd_node_t* cmd_node, client_node_t* client) {
         char* env_val = cmd_node->args[2];
         set_env_to_client_node(client, env_name, env_val);
         setenv(env_name, env_val, 1);
+        decrease_all_pipe_node(client->pipe_list);
         return 0;
     } else if(strcmp(cmd_node->cmd, "exit") == 0) {
         char exit_msg[64];
@@ -119,6 +120,7 @@ int exec_cmd_node(cmd_node_t* cmd_node, client_node_t* client) {
         return -4;
     } else if(strcmp(cmd_node->cmd, "who") == 0) {
         who(client);
+        decrease_all_pipe_node(client->pipe_list);
         return 0;
     } else if(strcmp(cmd_node->cmd, "tell") == 0) {
         int r = tell(client, cmd_node->args[1], cmd_node->args[2]);
@@ -145,6 +147,7 @@ int exec_cmd_node(cmd_node_t* cmd_node, client_node_t* client) {
             sprintf(msg, "*** User from %s/%d is named '%s'. ***\n", client->ip, client->port, client->name);
             broad_cast(client, msg);
             fflush(stdout);
+            decrease_all_pipe_node(client->pipe_list);
         }
         return 0;
     } /* else if(cmd_node->pipe_from_user == 1) {

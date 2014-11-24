@@ -72,7 +72,7 @@ int main(int argc, const char * argv[])
             }
 
             client_node_t* new_client_node;
-            new_client_node = create_client_node(new_client_sock, inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+            new_client_node = create_client_node(new_client_sock, "CGILAB"/*inet_ntoa(client_addr.sin_addr)*/, 511/*ntohs(client_addr.sin_port)*/);
 
             if(insert_to_client_list(new_client_node) != -1) {
                 dup2(new_client_sock, 1);
