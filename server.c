@@ -239,6 +239,8 @@ int exec_cmd_node(cmd_node_t* cmd_node, client_node_t* client) {
             close(output_pipe_fd);
         } else if(cmd_node->pipe_to_user == 1) {
             close(1);
+            close(2);
+            dup(output_pipe_fd);
             dup(output_pipe_fd);
             close(output_pipe_fd);
         } else {
