@@ -49,7 +49,7 @@ void parse_tokens(cmd_node_t** cmd_node_list) {
                     strcpy(client_id_str, (token_str + 1));
 
                     // set client id to pipe to
-                    current_cmd_node->user_id = atoi(client_id_str);
+                    current_cmd_node->to_user_id = atoi(client_id_str);
                     current_cmd_node->pipe_to_user = 1;
                     free(client_id_str);
                 }
@@ -152,7 +152,7 @@ void parse_tokens(cmd_node_t** cmd_node_list) {
                 char user_id_str[10];
                 bzero(user_id_str, 10);
                 strcpy(user_id_str, (token_str + 1));
-                current_cmd_node->user_id = atoi(user_id_str);
+                current_cmd_node->from_user_id = atoi(user_id_str);
             }
             /*
             current_cmd_node = malloc(sizeof(cmd_node_t));
