@@ -14,7 +14,7 @@
 #include "passivesock.h"
 #include "client_node.h"
 
-char* welcome_message = "****************************************\r\n** Welcome to the information server. **\r\n****************************************";
+char* welcome_message = "****************************************\n** Welcome to the information server. **\n****************************************";
 
 void handleSIGCHLD() {
     int stat;
@@ -76,13 +76,15 @@ int main(int argc, const char * argv[])
 
             if(insert_to_client_list(new_client_node) != -1) {
                 dup2(new_client_sock, 1);
-                printf("%s\r\n", welcome_message);
-                printf("%% ");
-                fflush(stdout);
+                printf("%s\n", welcome_message);
                 char user_in_prompt[1024];
-                sprintf(user_in_prompt, "*** User '(no name)' entered from %s/%d. ***\r\n", new_client_node->ip, new_client_node->port);
+                sprintf(user_in_prompt, "*** User '(no name)' entered from %s/%d. ***\n", new_client_node->ip, new_client_node->port);
                 broad_cast(new_client_node, user_in_prompt);
                 FD_SET(new_client_sock, &afds);
+
+                printf("%% ");
+                fflush(stdout);
+
             } else {
                 perror("client list full");
             }

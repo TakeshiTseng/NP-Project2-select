@@ -148,9 +148,13 @@ void parse_tokens(cmd_node_t** cmd_node_list) {
             state = _next_state(state, token_type);
         } else if(state == STATE_FROM_USR) {
             if(current_cmd_node != NULL) {
-                insert_cmd_node(cmd_node_list, current_cmd_node);
-                current_cmd_node = NULL;
+                current_cmd_node->pipe_from_user = 1;
+                char user_id_str[10];
+                bzero(user_id_str, 10);
+                strcpy(user_id_str, (token_str + 1));
+                current_cmd_node->user_id = atoi(user_id_str);
             }
+            /*
             current_cmd_node = malloc(sizeof(cmd_node_t));
             current_cmd_node->pipe_to_file = 0;// not to pipe to file
             current_cmd_node->pipe_count = 0;
@@ -166,20 +170,20 @@ void parse_tokens(cmd_node_t** cmd_node_list) {
             strcpy(user_id_str, (token_str + 1));
             current_cmd_node->user_id = atoi(user_id_str);
             insert_cmd_node(cmd_node_list, current_cmd_node);
-
+            */
             pre_state = state;
             token_type = next_token(&token_str);
             state = _next_state(state, token_type);
         }
     }
     // new line
-    if(pre_state == STATE_INIT || pre_state == STATE_FROM_USR) {
+    if(pre_state == STATE_INIT ) {
         // do nothing?
         current_cmd_node = malloc(sizeof(cmd_node_t));
         current_cmd_node->pipe_count = -1; //assume we set -1 to new line command(?)
         current_cmd_node->next_node = NULL;
         insert_cmd_node(cmd_node_list, current_cmd_node);
-    } else if(pre_state == STATE_FILE || pre_state == STATE_ARGS || pre_state == STATE_CMD) {
+    } else if(pre_state == STATE_FILE || pre_state == STATE_ARGS || pre_state == STATE_CMD || pre_state == STATE_FROM_USR) {
         insert_cmd_node(cmd_node_list, current_cmd_node);
     }
 }
@@ -196,7 +200,7 @@ int _next_state(int state, int next_token_type) {
         } else if(next_token_type == PIPE_FROM_USR) {
             return STATE_FROM_USR;
         }
-    } else if(state == STATE_CMD) {
+    } else if(state == STATE_CMD || state == STATE_FROM_USR) {
         if(next_token_type == CMD) {
             return STATE_ARGS;
         } else if(next_token_type == PASS) {

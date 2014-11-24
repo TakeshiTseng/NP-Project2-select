@@ -87,7 +87,7 @@ void remove_client_node(client_node_t* client) {
 int tell(client_node_t* current_client, char* client_id_str, char* message) {
     int c;
     int client_id = atoi(client_id_str);
-    if(client_list[client_id] == NULL || client_id < 0 || client_id >= 30) {
+    if(client_list[client_id] == NULL || client_id < 1 || client_id > 30) {
         return -1;
     } else {
         dup2(client_list[client_id]->client_sc_fd, 1);

@@ -38,7 +38,7 @@ void _read_and_parse() {
     last_line = malloc(_n_bytes + 1);
     bzero(last_line, _n_bytes + 1);
     strcpy(last_line, _p_buffer);
-    last_line[_n_bytes - 2] = '\0';
+    last_line[_n_bytes - 1] = '\0';
 
     if(_n_bytes <= 0) { // end of stream or error
         token_node_t* new_node = malloc(sizeof(token_node_t));
