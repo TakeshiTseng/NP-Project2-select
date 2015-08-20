@@ -23,3 +23,5 @@ test/*
 
 # ras test files
 ras/*.txt
+
+*.rar
